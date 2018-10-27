@@ -1,9 +1,10 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
 const fs = require('fs');
-const ws = fs.createWriteStream('written/cmc.csv');
+const wscsv = fs.createWriteStream('written/cmc.csv');
 
-ws.write(`rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h \n`)
+
+wscsv.write(`rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h \n`)
 
 class Coin {
     constructor(rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h) {
@@ -19,17 +20,18 @@ class Coin {
     }
 }
 
-axios.request('https://coinmarketcap.com/')
+
+axios.request(`https://coinmarketcap.com/`)
     .then(res => {
         const $ = cheerio.load(res.data, {
             normalizeWhitespace: true,
             xmlMode: true
         })
-        
+
         //grabs the table removes unwanted <ul> elements
         const table = $('tbody')
         table.find('ul').remove();
-        
+
         //finds each coin row and converts its contents to an array that is filtered
         const o = table.find('tr').text();
         const outSplit = o.split(' ')
@@ -51,15 +53,27 @@ axios.request('https://coinmarketcap.com/')
 
         //creates coin key value pairs
         let grouped = spliced.map(e => {
-            return new Coin( ...e )
+            return new Coin(...e)
         })
-        
+
         //writes coin info to csv file in the written folder
         grouped.map(e => {
-            const {rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h} = e;
+            const { rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h } = e;
 
-            ws.write(` ${rank}, ${ticker}, ${name}, ${marketCap}, ${price}, ${volume24h}, ${circulatingSupply}, ${ticker2}, ${change24h} \n`)
+            wscsv.write(` ${rank}, ${ticker}, ${name}, ${marketCap}, ${price}, ${volume24h}, ${circulatingSupply}, ${ticker2}, ${change24h} \n`)
         })
 
+        //writes coin info to json file in the written folder
+        const content = JSON.stringify(grouped);
+
+            fs.writeFile("written/cmc.json", content, 'utf8', function (err) {
+                if (err) {
+                    return console.log(err);
+                }
+
+                console.log("JSON saved succesfully");
+            });
 
     })
+
+
