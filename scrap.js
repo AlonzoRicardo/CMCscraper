@@ -26,13 +26,16 @@ axios.request('https://coinmarketcap.com/')
             xmlMode: true
         })
         
-
+        //grabs the table removes unwanted <ul> elements
         const table = $('tbody')
         table.find('ul').remove();
+        
+        //finds each coin row and converts its contents to an array that is filtered
         const o = table.find('tr').text();
         const outSplit = o.split(' ')
             .filter(e => e !== '' && e !== '*')
 
+        //separates each coin's info into subarrays
         let spliced = [];
         let count = 2;
         let acc = [];
@@ -46,10 +49,12 @@ axios.request('https://coinmarketcap.com/')
             acc.push(outSplit[i]);
         }
 
+        //creates coin key value pairs
         let grouped = spliced.map(e => {
             return new Coin( ...e )
         })
         
+        //writes coin info to csv file in the written folder
         grouped.map(e => {
             const {rank, ticker, name, marketCap, price, volume24h, circulatingSupply, ticker2, change24h} = e;
 
